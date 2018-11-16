@@ -12,6 +12,7 @@
 		30794B8721978779009517AB /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 30794B8521978779009517AB /* Main.storyboard */; };
 		30794B892197877D009517AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 30794B882197877D009517AB /* Assets.xcassets */; };
 		30794B8C2197877D009517AB /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 30794B8A2197877D009517AB /* LaunchScreen.storyboard */; };
+		30794B9421978E28009517AB /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30794B9321978E28009517AB /* GameScene.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +23,7 @@
 		30794B882197877D009517AB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		30794B8B2197877D009517AB /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		30794B8D2197877D009517AB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		30794B9321978E28009517AB /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +58,7 @@
 			children = (
 				30794B8121978779009517AB /* AppDelegate.swift */,
 				30794B8321978779009517AB /* ViewController.swift */,
+				30794B9321978E28009517AB /* GameScene.swift */,
 				30794B8521978779009517AB /* Main.storyboard */,
 				30794B882197877D009517AB /* Assets.xcassets */,
 				30794B8A2197877D009517AB /* LaunchScreen.storyboard */,
@@ -135,6 +138,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				30794B9421978E28009517AB /* GameScene.swift in Sources */,
 				30794B8421978779009517AB /* ViewController.swift in Sources */,
 				30794B8221978779009517AB /* AppDelegate.swift in Sources */,
 			);
@@ -283,7 +287,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = S6UPZG7ZR3;
 				INFOPLIST_FILE = LifeOfAReferee/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 11;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -300,7 +306,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = S6UPZG7ZR3;
 				INFOPLIST_FILE = LifeOfAReferee/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 11;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
