@@ -48,9 +48,13 @@ class GameScene: SKScene {
     let gameEndSound = SKAction.playSoundFileNamed("LongWhistle.m4a", waitForCompletion: false)
 
     var score = 0
+    var age = 14
     var playing = false
 
     var referee: SKSpriteNode?
+
+    var scoreLabel = SKLabelNode()
+    var ageLabel = SKLabelNode()
 
     override func didMove(to view: SKView) {
         backgroundColor = .darkGray
@@ -61,26 +65,14 @@ class GameScene: SKScene {
         physicsWorld.gravity = CGVector(dx: 0.0, dy: -12)
 
         createScene()
-        
-//        createBackground()
-//        createGrass()
-//        createReferee()
-////        createBall()
-//
-//        startDisplayingGameObjects()
-//        createScoreLabel()
-
 
     }
 
-    var scoreLabel = SKLabelNode()
 
     func createScene() {
         createBackground()
         createGrass()
         createReferee()
-
-        createScoreLabel()
     }
 
     func stopGame() {
@@ -90,7 +82,8 @@ class GameScene: SKScene {
 
         playing = false
         score = 0
-
+        age = 14
+        impulse = -400
 
         createScene()
         run(gameEndSound)
@@ -101,20 +94,43 @@ class GameScene: SKScene {
         setRefereeInMotion()
         setGrassInMotion()
         startDisplayingGameObjects()
+        startCountingAge()
+
+        createScoreLabel()
+        createAgeLabel()
 
         playing = true
     }
 
     func createScoreLabel() {
         guard let view = view else { return }
-        let labelNode = SKLabelNode(attributedText: attributedString(for: score))
+        let labelNode = SKLabelNode(attributedText: attributedScoreString(for: score))
         labelNode.position = CGPoint(x: view.frame.width - labelNode.frame.width/2 - 20 - view.safeAreaInsets.right, y: view.frame.height - labelNode.frame.height/2 - 40 - view.safeAreaInsets.top)
         addChild(labelNode)
         scoreLabel = labelNode
     }
 
+    func createAgeLabel() {
+        guard let view = view else { return }
+        let labelNode = SKLabelNode(attributedText: attributedAgeString(for: age))
+        labelNode.position = CGPoint(x: labelNode.frame.width/2 + 20 + view.safeAreaInsets.right, y: view.frame.height - labelNode.frame.height/2 - 40 - view.safeAreaInsets.top)
+        addChild(labelNode)
+        ageLabel = labelNode
 
-    func attributedString(for score: Int) -> NSAttributedString {
+    }
+
+    func startCountingAge() {
+        let wait = SKAction.wait(forDuration: 5)
+        let timedAction = SKAction.run {
+            self.removeChildren(in: [self.ageLabel])
+            self.age += 1
+            self.createAgeLabel()
+        }
+
+        run(SKAction.repeatForever(SKAction.sequence([wait, timedAction])))
+    }
+
+    func attributedScoreString(for score: Int) -> NSAttributedString {
         let pointString = "\(score) pts"
         let attributedString = NSMutableAttributedString(string: pointString)
         let start = attributedString.length - 3
@@ -122,6 +138,16 @@ class GameScene: SKScene {
 
         attributedString.addAttributes([.font: UIFont.systemFont(ofSize: 15, weight: .heavy)], range: NSRange(location: start, length: length))
         attributedString.addAttributes([.font: UIFont.systemFont(ofSize: 48, weight: .heavy)], range: NSRange(location: 0, length: attributedString.length - 4))
+        attributedString.addAttributes([.foregroundColor: #colorLiteral(red: 0.3291337788, green: 0.3291337788, blue: 0.3291337788, alpha: 1)], range: NSRange(location: 0, length: attributedString.length))
+        return attributedString
+    }
+
+    func attributedAgeString(for score: Int) -> NSAttributedString {
+        let pointString = "age \(score)"
+        let attributedString = NSMutableAttributedString(string: pointString)
+
+        attributedString.addAttributes([.font: UIFont.systemFont(ofSize: 15, weight: .heavy)], range: NSRange(location: 0, length: 3))
+        attributedString.addAttributes([.font: UIFont.systemFont(ofSize: 48, weight: .heavy)], range: NSRange(location: 4, length: attributedString.length - 4))
         attributedString.addAttributes([.foregroundColor: #colorLiteral(red: 0.3291337788, green: 0.3291337788, blue: 0.3291337788, alpha: 1)], range: NSRange(location: 0, length: attributedString.length))
         return attributedString
     }
@@ -315,11 +341,13 @@ class GameScene: SKScene {
         referee.position = CGPoint(x: 100, y: grassHeight)
         referee.zPosition = GameLayers.referee.rawValue
         referee.name = "Referee"
+        referee.setScale(0.5)
 
 
         referee.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: referee.frame.width/2, height: referee.frame.height), center: CGPoint(x: referee.frame.width/2, y: referee.frame.height/2))
         referee.physicsBody?.linearDamping = 1.2
         referee.physicsBody?.restitution = 0
+        referee.physicsBody?.mass = 1
         referee.physicsBody?.allowsRotation = false
         referee.physicsBody?.categoryBitMask = CollisionMasks.referee
         referee.physicsBody?.collisionBitMask = CollisionMasks.grass
@@ -342,6 +370,7 @@ class GameScene: SKScene {
 
         repeatAction = SKAction.repeatForever(animatedReferee)
         referee?.run(repeatAction)
+        referee?.run(SKAction.scale(to: 1.0, duration: 30))
     }
 
     override func update(_ currentTime: TimeInterval) {
@@ -406,7 +435,7 @@ class GameScene: SKScene {
 
         if (referee?.frame.origin.y ?? 0) <= grassHeight + 1 {
             referee?.physicsBody?.velocity = .zero
-            referee?.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 600))
+            referee?.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 800))
             referee?.isPaused = true
             referee?.texture = SKTexture(image: #imageLiteral(resourceName: "RefereeJumping"))
         }
