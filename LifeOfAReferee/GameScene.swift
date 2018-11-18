@@ -73,6 +73,7 @@ class GameScene: SKScene {
         createBackground()
         createGrass()
         createReferee()
+        showLabels()
     }
 
     func stopGame() {
@@ -90,16 +91,18 @@ class GameScene: SKScene {
     }
 
     func startGame() {
-
         setRefereeInMotion()
         setGrassInMotion()
         startDisplayingGameObjects()
         startCountingAge()
 
+        playing = true
+    }
+
+    func showLabels() {
+        removeChildren(in: [scoreLabel, ageLabel])
         createScoreLabel()
         createAgeLabel()
-
-        playing = true
     }
 
     func createScoreLabel() {
@@ -446,13 +449,6 @@ class GameScene: SKScene {
 
 extension GameScene: SKPhysicsContactDelegate {
     func didBegin(_ contact: SKPhysicsContact) {
-
-        enumerateChildNodes(withName: "Ball") { (node, _) in
-            if contact.bodyA == node.physicsBody || contact.bodyB == node.physicsBody {
-                print("Did touch the ball")
-            }
-        }
-
 
 //        print(CollisionMasks.grass)
 //        print(CollisionMasks.referee)
