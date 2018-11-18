@@ -13,6 +13,8 @@
 		30794B892197877D009517AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 30794B882197877D009517AB /* Assets.xcassets */; };
 		30794B8C2197877D009517AB /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 30794B8A2197877D009517AB /* LaunchScreen.storyboard */; };
 		30794B9421978E28009517AB /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30794B9321978E28009517AB /* GameScene.swift */; };
+		30FE777621A1E84300FE592D /* ShortWhistle.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 30FE777521A1E7B900FE592D /* ShortWhistle.m4a */; };
+		30FE777821A1E93500FE592D /* LongWhistle.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 30FE777721A1E93500FE592D /* LongWhistle.m4a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +26,8 @@
 		30794B8B2197877D009517AB /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		30794B8D2197877D009517AB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		30794B9321978E28009517AB /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
+		30FE777521A1E7B900FE592D /* ShortWhistle.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = ShortWhistle.m4a; sourceTree = "<group>"; };
+		30FE777721A1E93500FE592D /* LongWhistle.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = LongWhistle.m4a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -59,6 +63,8 @@
 				30794B8121978779009517AB /* AppDelegate.swift */,
 				30794B8321978779009517AB /* ViewController.swift */,
 				30794B9321978E28009517AB /* GameScene.swift */,
+				30FE777521A1E7B900FE592D /* ShortWhistle.m4a */,
+				30FE777721A1E93500FE592D /* LongWhistle.m4a */,
 				30794B8521978779009517AB /* Main.storyboard */,
 				30794B882197877D009517AB /* Assets.xcassets */,
 				30794B8A2197877D009517AB /* LaunchScreen.storyboard */,
@@ -128,6 +134,8 @@
 				30794B8C2197877D009517AB /* LaunchScreen.storyboard in Resources */,
 				30794B892197877D009517AB /* Assets.xcassets in Resources */,
 				30794B8721978779009517AB /* Main.storyboard in Resources */,
+				30FE777821A1E93500FE592D /* LongWhistle.m4a in Resources */,
+				30FE777621A1E84300FE592D /* ShortWhistle.m4a in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -44,7 +44,11 @@ class GameScene: SKScene {
     let grassWidth = SKSpriteNode(imageNamed: "Grass").size.width - 0.5
     let grassHeight = SKSpriteNode(imageNamed: "Grass").size.height - 25.0
 
+    let scoreSound = SKAction.playSoundFileNamed("ShortWhistle.m4a", waitForCompletion: false)
+    let gameEndSound = SKAction.playSoundFileNamed("LongWhistle.m4a", waitForCompletion: false)
+
     var score = 0
+    var playing = false
 
     var referee: SKSpriteNode?
 
@@ -56,19 +60,50 @@ class GameScene: SKScene {
 
         physicsWorld.gravity = CGVector(dx: 0.0, dy: -12)
 
+        createScene()
         
-        createBackground()
-        createGrass()
-        createReferee()
-//        createBall()
-
-        startDisplayingGameObjects()
-        createScoreLabel()
+//        createBackground()
+//        createGrass()
+//        createReferee()
+////        createBall()
+//
+//        startDisplayingGameObjects()
+//        createScoreLabel()
 
 
     }
 
     var scoreLabel = SKLabelNode()
+
+    func createScene() {
+        createBackground()
+        createGrass()
+        createReferee()
+
+        createScoreLabel()
+    }
+
+    func stopGame() {
+        self.removeAllActions()
+        self.removeAllChildren()
+
+
+        playing = false
+        score = 0
+
+
+        createScene()
+        run(gameEndSound)
+    }
+
+    func startGame() {
+
+        setRefereeInMotion()
+        setGrassInMotion()
+        startDisplayingGameObjects()
+
+        playing = true
+    }
 
     func createScoreLabel() {
         guard let view = view else { return }
@@ -117,6 +152,25 @@ class GameScene: SKScene {
             }
 
             lastObject = probabilityMap[randomValue]
+
+            self.enumerateChildNodes(withName: "Grass") { (node, _) in
+                node.physicsBody?.applyImpulse(CGVector(dx: self.impulseDelta, dy: 0))
+            }
+
+            self.enumerateChildNodes(withName: "Ball") { (node, _) in
+                node.physicsBody?.applyImpulse(CGVector(dx: self.impulseDelta, dy: 0))
+            }
+
+            self.enumerateChildNodes(withName: "Red Card") { (node, _) in
+                node.physicsBody?.applyImpulse(CGVector(dx: self.impulseDelta, dy: 0))
+            }
+
+            self.enumerateChildNodes(withName: "Yellow Card") { (node, _) in
+                node.physicsBody?.applyImpulse(CGVector(dx: self.impulseDelta, dy: 0))
+            }
+
+            self.impulse += self.impulseDelta
+
         }
 
         run(SKAction.repeatForever(SKAction.sequence([wait, timedAction])))
@@ -135,7 +189,8 @@ class GameScene: SKScene {
         addChild(background)
     }
 
-    let impulse: CGFloat = -400
+    var impulse: CGFloat = -400
+    let impulseDelta: CGFloat = -5
 
     func createBall() {
         let ball = SKSpriteNode(imageNamed: "Ball")
@@ -239,9 +294,14 @@ class GameScene: SKScene {
 //            grass.physicsBody?.isDynamic = false
 
             addChild(grass)
-            grass.physicsBody?.applyImpulse(CGVector(dx: impulse, dy: 0))
         }
 
+    }
+
+    func setGrassInMotion() {
+        enumerateChildNodes(withName: "Grass") { (node, _) in
+            node.physicsBody?.applyImpulse(CGVector(dx: self.impulse, dy: 0))
+        }
     }
 
     var repeatAction = SKAction()
@@ -267,18 +327,21 @@ class GameScene: SKScene {
         referee.physicsBody?.affectedByGravity = true
         referee.physicsBody?.isDynamic = true
 
+
+        addChild(referee)
+
+        self.referee = referee
+
+    }
+
+    func setRefereeInMotion() {
         let animatedReferee = SKAction.animate(with: [
             refereeAtlas.textureNamed("Referee1"),
             refereeAtlas.textureNamed("Referee2")
             ], timePerFrame: 0.1)
 
         repeatAction = SKAction.repeatForever(animatedReferee)
-
-        addChild(referee)
-
-        referee.run(repeatAction)
-        self.referee = referee
-
+        referee?.run(repeatAction)
     }
 
     override func update(_ currentTime: TimeInterval) {
@@ -336,6 +399,11 @@ class GameScene: SKScene {
 
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if !playing {
+            startGame()
+            return
+        }
+
         if (referee?.frame.origin.y ?? 0) <= grassHeight + 1 {
             referee?.physicsBody?.velocity = .zero
             referee?.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 600))
@@ -349,6 +417,7 @@ class GameScene: SKScene {
 
 extension GameScene: SKPhysicsContactDelegate {
     func didBegin(_ contact: SKPhysicsContact) {
+
         enumerateChildNodes(withName: "Ball") { (node, _) in
             if contact.bodyA == node.physicsBody || contact.bodyB == node.physicsBody {
                 print("Did touch the ball")
@@ -376,6 +445,7 @@ extension GameScene: SKPhysicsContactDelegate {
             score = 0
             removeChildren(in: [scoreLabel])
             createScoreLabel()
+            stopGame()
         }
 
         if (contact.bodyA.categoryBitMask == CollisionMasks.referee && contact.bodyB.categoryBitMask == CollisionMasks.yellowCard) ||
@@ -383,6 +453,7 @@ extension GameScene: SKPhysicsContactDelegate {
             score += 1
             removeChildren(in: [scoreLabel])
             createScoreLabel()
+            run(scoreSound)
 
 
             if contact.bodyA.categoryBitMask == CollisionMasks.yellowCard {
@@ -398,6 +469,7 @@ extension GameScene: SKPhysicsContactDelegate {
             score += 2
             removeChildren(in: [scoreLabel])
             createScoreLabel()
+            run(scoreSound)
 
             if contact.bodyA.categoryBitMask == CollisionMasks.redCard {
                 removeChildren(in: [contact.bodyA.node ?? SKNode()])
