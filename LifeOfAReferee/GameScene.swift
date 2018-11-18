@@ -21,6 +21,8 @@ struct CollisionMasks {
     static let grass: UInt32 = 0x1 << 0
     static let referee: UInt32 = 0x1 << 1
     static let ball: UInt32 = 0x1 << 2
+    static let redCard: UInt32 = 0x1 << 3
+    static let yellowCard: UInt32 = 0x1 << 4
 }
 
 class GameScene: SKScene {
@@ -34,10 +36,7 @@ class GameScene: SKScene {
     override func didMove(to view: SKView) {
         backgroundColor = .darkGray
 
-//        node.position = CGPoint(x: view.center.x, y: view.center.y)
-//        addChild(node)
-
-        view.showsPhysics = true
+//        view.showsPhysics = true
         physicsWorld.contactDelegate = self
 
         physicsWorld.gravity = CGVector(dx: 0.0, dy: -12)
@@ -47,15 +46,6 @@ class GameScene: SKScene {
         createGrass()
         createReferee()
         createBall()
-
-//        let grass = SKSpriteNode(imageNamed: "Grass")
-//        grass.anchorPoint = .zero
-//        grass.position = .zero
-//        grass.name = "Grass"
-//        addChild(grass)
-//
-//        print(grass.size)
-//        print(GameLayers.foreground.rawValue)
     }
 
     func createBackground() {
@@ -76,7 +66,8 @@ class GameScene: SKScene {
         ball.name = "Ball"
 
         ball.physicsBody = SKPhysicsBody(circleOfRadius: ball.frame.width/2, center: CGPoint(x: ball.frame.width/2, y: ball.frame.height/2))
-        ball.physicsBody?.linearDamping = 1.2
+        ball.physicsBody?.linearDamping = 0
+        ball.physicsBody?.mass = 1
         ball.physicsBody?.restitution = 0
         ball.physicsBody?.categoryBitMask = CollisionMasks.ball
         ball.physicsBody?.collisionBitMask = 0
@@ -85,7 +76,7 @@ class GameScene: SKScene {
         ball.physicsBody?.isDynamic = true
 
         addChild(ball)
-
+        ball.physicsBody?.applyImpulse(CGVector(dx: -200, dy: 0))
     }
 
     func createGrass() {
@@ -114,17 +105,17 @@ class GameScene: SKScene {
             grass.position = CGPoint(x: CGFloat(index) * grassWidth, y: 0)
             grass.name = "Grass"
 
-//            grass.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: grassWidth, height: grassHeight), center: CGPoint(x: grass.frame.width/2, y: grassHeight/2))
-
-//            grass.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: grass.frame.width, height: grassHeight), center: CGPoint(x: frame.width/2, y: frame.height/2 - 15/2))
-//                SKPhysicsBody(rectangleOf: CGSize(width: grass.size.width, height: 1))
-//            grass.physicsBody?.categoryBitMask = CollisionMasks.grass
-//            grass.physicsBody?.collisionBitMask = 0
-//            grass.physicsBody?.contactTestBitMask = CollisionMasks.referee
-//            grass.physicsBody?.affectedByGravity = false
+            grass.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: grassWidth, height: grassHeight), center: CGPoint(x: grass.frame.width/2, y: grassHeight/2))
+            grass.physicsBody?.categoryBitMask = 0
+            grass.physicsBody?.mass = 1
+            grass.physicsBody?.collisionBitMask = 0
+            grass.physicsBody?.contactTestBitMask = 0
+            grass.physicsBody?.affectedByGravity = false
+            grass.physicsBody?.linearDamping = 0.0
 //            grass.physicsBody?.isDynamic = false
 
             addChild(grass)
+            grass.physicsBody?.applyImpulse(CGVector(dx: -200, dy: 0))
         }
 
     }
@@ -161,16 +152,12 @@ class GameScene: SKScene {
 
     override func update(_ currentTime: TimeInterval) {
 
-        let screenWidth = scene?.frame.width ?? 0
-//        let indexOfLastTile = Int((screenWidth / grassWidth).rounded(.up))
-
         var outOfFrameGrass: SKNode?
         var lastNode: SKNode?
 
         enumerateChildNodes(withName: "Grass") { (node, _) in
             if self.isOutsideFrame(node: node) {
                 outOfFrameGrass = node
-//                node.position = CGPoint(x: (CGFloat(indexOfLastTile) * self.grassWidth).rounded(), y: 0)
             }
 
             if let lNode = lastNode {
@@ -181,23 +168,16 @@ class GameScene: SKScene {
                 lastNode = node
             }
 
-            node.position.x -= self.timeAdjuestedVelocity(for: currentTime)
-
         }
 
         outOfFrameGrass?.position.x = (lastNode?.position.x ?? 0) + grassWidth
 
         enumerateChildNodes(withName: "Ball") { (node, _) in
-            node.position.x -= self.timeAdjuestedVelocity(for: currentTime)
 
             if self.isOutsideFrame(node: node) {
                 node.position.x = self.view?.frame.width ?? 1000
-//                node.position = CGPoint(x: (CGFloat(indexOfLastTile) * self.grassWidth).rounded(), y: 0)
-//                node.position.x -= self.velocity
             }
         }
-
-        lastUpdate = currentTime
     }
 
     func isOutsideFrame(node: SKNode) -> Bool {
