@@ -8,13 +8,11 @@
 
 import SpriteKit
 
-enum GameLayers: Int {
+enum GameLayers: CGFloat {
     case background = -6
-    case foreground
-    case ksjdnfknsefn
-    case skjdbfkjd
-    case lihdfkjwrf
-    case wehfwef
+    case grass
+    case referee
+    case gameObject
 }
 
 struct CollisionMasks {
@@ -25,11 +23,28 @@ struct CollisionMasks {
     static let yellowCard: UInt32 = 0x1 << 4
 }
 
+enum GameObject: CaseIterable {
+    case ball
+    case redCard
+    case yellowCard
+    case nothing
+
+    static func probabilities(for object: GameObject) -> Int {
+        switch object {
+        case .ball: return 2
+        case .redCard: return 1
+        case .yellowCard: return 4
+        case .nothing: return 4
+        }
+    }
+}
+
 class GameScene: SKScene {
 
-//    let node = SKSpriteNode(color: .red, size: CGSize(width: 20, height: 20))
     let grassWidth = SKSpriteNode(imageNamed: "Grass").size.width - 0.5
     let grassHeight = SKSpriteNode(imageNamed: "Grass").size.height - 25.0
+
+    var score = 0
 
     var referee: SKSpriteNode?
 
@@ -45,7 +60,68 @@ class GameScene: SKScene {
         createBackground()
         createGrass()
         createReferee()
-        createBall()
+//        createBall()
+
+        startDisplayingGameObjects()
+        createScoreLabel()
+
+
+    }
+
+    var scoreLabel = SKLabelNode()
+
+    func createScoreLabel() {
+        guard let view = view else { return }
+        let labelNode = SKLabelNode(attributedText: attributedString(for: score))
+        labelNode.position = CGPoint(x: view.frame.width - labelNode.frame.width/2 - 20 - view.safeAreaInsets.right, y: view.frame.height - labelNode.frame.height/2 - 40 - view.safeAreaInsets.top)
+        addChild(labelNode)
+        scoreLabel = labelNode
+    }
+
+
+    func attributedString(for score: Int) -> NSAttributedString {
+        let pointString = "\(score) pts"
+        let attributedString = NSMutableAttributedString(string: pointString)
+        let start = attributedString.length - 3
+        let length = 3
+
+        attributedString.addAttributes([.font: UIFont.systemFont(ofSize: 15, weight: .heavy)], range: NSRange(location: start, length: length))
+        attributedString.addAttributes([.font: UIFont.systemFont(ofSize: 48, weight: .heavy)], range: NSRange(location: 0, length: attributedString.length - 4))
+        attributedString.addAttributes([.foregroundColor: #colorLiteral(red: 0.3291337788, green: 0.3291337788, blue: 0.3291337788, alpha: 1)], range: NSRange(location: 0, length: attributedString.length))
+        return attributedString
+    }
+
+    func startDisplayingGameObjects() {
+        var probabilityMap = [GameObject]()
+
+        for object in GameObject.allCases {
+            for _ in 0..<GameObject.probabilities(for: object) {
+                probabilityMap.append(object)
+            }
+        }
+
+        var lastObject = GameObject.yellowCard
+
+        let wait = SKAction.wait(forDuration: 0.5)
+        let timedAction = SKAction.run {
+            let randomValue = Int.random(in: 0..<probabilityMap.count)
+
+            switch probabilityMap[randomValue] {
+            case .ball:
+                if lastObject != .ball {
+                    self.createBall()
+                }
+            case .nothing: break
+            case .redCard: self.createRedCard()
+            case .yellowCard: self.createYellowCard()
+            }
+
+            lastObject = probabilityMap[randomValue]
+        }
+
+        run(SKAction.repeatForever(SKAction.sequence([wait, timedAction])))
+
+
     }
 
     func createBackground() {
@@ -54,15 +130,18 @@ class GameScene: SKScene {
         background.anchorPoint = .zero
         background.position = .zero
         background.name = "Background"
-        background.zPosition = -2
+        background.zPosition = GameLayers.background.rawValue
 
         addChild(background)
     }
 
+    let impulse: CGFloat = -400
+
     func createBall() {
         let ball = SKSpriteNode(imageNamed: "Ball")
         ball.anchorPoint = .zero
-        ball.position = CGPoint(x: 500, y: grassHeight)
+        ball.position = CGPoint(x: frame.width, y: grassHeight)
+        ball.zPosition = GameLayers.gameObject.rawValue
         ball.name = "Ball"
 
         ball.physicsBody = SKPhysicsBody(circleOfRadius: ball.frame.width/2, center: CGPoint(x: ball.frame.width/2, y: ball.frame.height/2))
@@ -76,7 +155,51 @@ class GameScene: SKScene {
         ball.physicsBody?.isDynamic = true
 
         addChild(ball)
-        ball.physicsBody?.applyImpulse(CGVector(dx: -200, dy: 0))
+        ball.physicsBody?.applyImpulse(CGVector(dx: impulse, dy: 0))
+    }
+
+    let cardOffset: CGFloat = 20
+
+    func createYellowCard() {
+        let card = SKSpriteNode(imageNamed: "Yellow Card")
+        card.anchorPoint = .zero
+        card.position = CGPoint(x: frame.width, y: grassHeight + cardOffset)
+        card.zPosition = GameLayers.gameObject.rawValue
+        card.name = "Yellow Card"
+
+        card.physicsBody = SKPhysicsBody(rectangleOf: card.frame.size, center: CGPoint(x: card.frame.width/2, y: card.frame.height/2))
+        card.physicsBody?.linearDamping = 0
+        card.physicsBody?.mass = 1
+        card.physicsBody?.restitution = 0
+        card.physicsBody?.categoryBitMask = CollisionMasks.yellowCard
+        card.physicsBody?.collisionBitMask = 0
+        card.physicsBody?.contactTestBitMask = CollisionMasks.referee
+        card.physicsBody?.affectedByGravity = false
+        card.physicsBody?.isDynamic = true
+
+        addChild(card)
+        card.physicsBody?.applyImpulse(CGVector(dx: impulse, dy: 0))
+    }
+
+    func createRedCard() {
+        let card = SKSpriteNode(imageNamed: "Red Card")
+        card.anchorPoint = .zero
+        card.position = CGPoint(x: frame.width, y: grassHeight + cardOffset)
+        card.zPosition = GameLayers.gameObject.rawValue
+        card.name = "Red Card"
+
+        card.physicsBody = SKPhysicsBody(rectangleOf: card.frame.size, center: CGPoint(x: card.frame.width/2, y: card.frame.height/2))
+        card.physicsBody?.linearDamping = 0
+        card.physicsBody?.mass = 1
+        card.physicsBody?.restitution = 0
+        card.physicsBody?.categoryBitMask = CollisionMasks.redCard
+        card.physicsBody?.collisionBitMask = 0
+        card.physicsBody?.contactTestBitMask = CollisionMasks.referee
+        card.physicsBody?.affectedByGravity = false
+        card.physicsBody?.isDynamic = true
+
+        addChild(card)
+        card.physicsBody?.applyImpulse(CGVector(dx: impulse, dy: 0))
     }
 
     func createGrass() {
@@ -103,6 +226,7 @@ class GameScene: SKScene {
             let grass = SKSpriteNode(imageNamed: "Grass")
             grass.anchorPoint = .zero
             grass.position = CGPoint(x: CGFloat(index) * grassWidth, y: 0)
+            grass.zPosition = GameLayers.grass.rawValue
             grass.name = "Grass"
 
             grass.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: grassWidth, height: grassHeight), center: CGPoint(x: grass.frame.width/2, y: grassHeight/2))
@@ -115,16 +239,23 @@ class GameScene: SKScene {
 //            grass.physicsBody?.isDynamic = false
 
             addChild(grass)
-            grass.physicsBody?.applyImpulse(CGVector(dx: -200, dy: 0))
+            grass.physicsBody?.applyImpulse(CGVector(dx: impulse, dy: 0))
         }
 
     }
 
+    var repeatAction = SKAction()
+
+    let refereeAtlas = SKTextureAtlas(named: "Sprites")
+
     func createReferee() {
-        let referee = SKSpriteNode(imageNamed: "Referee")
+        let referee = SKSpriteNode(texture: refereeAtlas.textureNamed("Referee1"))
+//            SKSpriteNode(imageNamed: "Referee")
         referee.anchorPoint = .zero
         referee.position = CGPoint(x: 100, y: grassHeight)
+        referee.zPosition = GameLayers.referee.rawValue
         referee.name = "Referee"
+
 
         referee.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: referee.frame.width/2, height: referee.frame.height), center: CGPoint(x: referee.frame.width/2, y: referee.frame.height/2))
         referee.physicsBody?.linearDamping = 1.2
@@ -136,18 +267,18 @@ class GameScene: SKScene {
         referee.physicsBody?.affectedByGravity = true
         referee.physicsBody?.isDynamic = true
 
+        let animatedReferee = SKAction.animate(with: [
+            refereeAtlas.textureNamed("Referee1"),
+            refereeAtlas.textureNamed("Referee2")
+            ], timePerFrame: 0.1)
+
+        repeatAction = SKAction.repeatForever(animatedReferee)
+
         addChild(referee)
+
+        referee.run(repeatAction)
         self.referee = referee
 
-    }
-
-    let velocity: CGFloat = 400
-
-    var lastUpdate: TimeInterval?
-
-    func timeAdjuestedVelocity(for currentTime: TimeInterval) -> CGFloat {
-        guard let lastUpdate = lastUpdate else { return 0 }
-        return velocity * CGFloat((currentTime - lastUpdate))
     }
 
     override func update(_ currentTime: TimeInterval) {
@@ -175,7 +306,21 @@ class GameScene: SKScene {
         enumerateChildNodes(withName: "Ball") { (node, _) in
 
             if self.isOutsideFrame(node: node) {
-                node.position.x = self.view?.frame.width ?? 1000
+                self.removeChildren(in: [node])
+            }
+        }
+
+        enumerateChildNodes(withName: "Yellow Card") { (node, _) in
+
+            if self.isOutsideFrame(node: node) {
+                self.removeChildren(in: [node])
+            }
+        }
+
+        enumerateChildNodes(withName: "Red Card") { (node, _) in
+
+            if self.isOutsideFrame(node: node) {
+                self.removeChildren(in: [node])
             }
         }
     }
@@ -193,7 +338,8 @@ class GameScene: SKScene {
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         if (referee?.frame.origin.y ?? 0) <= grassHeight + 1 {
             referee?.physicsBody?.velocity = .zero
-            referee?.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 500))
+            referee?.physicsBody?.applyImpulse(CGVector(dx: 0, dy: 600))
+            referee?.isPaused = true
             referee?.texture = SKTexture(image: #imageLiteral(resourceName: "RefereeJumping"))
         }
     }
@@ -210,19 +356,57 @@ extension GameScene: SKPhysicsContactDelegate {
         }
 
 
-        print(CollisionMasks.grass)
-        print(CollisionMasks.referee)
-        print(contact.bodyA.categoryBitMask)
-        print(contact.bodyB.categoryBitMask)
+//        print(CollisionMasks.grass)
+//        print(CollisionMasks.referee)
+//        print(contact.bodyA.categoryBitMask)
+//        print(contact.bodyB.categoryBitMask)
 
-        if contact.bodyA.categoryBitMask == CollisionMasks.grass, contact.bodyB.categoryBitMask == CollisionMasks.referee {
-            referee?.texture = SKTexture(image: #imageLiteral(resourceName: "Referee"))
+//        if contact.bodyA.categoryBitMask == CollisionMasks.grass, contact.bodyB.categoryBitMask == CollisionMasks.referee {
+////            referee?.texture = SKTexture(image: #imageLiteral(resourceName: "Referee"))
+//        }
+
+        if (contact.bodyA.categoryBitMask == CollisionMasks.grass && contact.bodyB.categoryBitMask == CollisionMasks.referee) ||
+            (contact.bodyB.categoryBitMask == CollisionMasks.grass && contact.bodyA.categoryBitMask == CollisionMasks.referee) {
+            referee?.texture = refereeAtlas.textureNamed("Referee1")
+            referee?.isPaused = false
         }
 
-        if contact.bodyA.categoryBitMask == CollisionMasks.referee, contact.bodyB.categoryBitMask == CollisionMasks.grass ||
-            contact.bodyB.categoryBitMask == CollisionMasks.referee, contact.bodyA.categoryBitMask == CollisionMasks.grass {
-            referee?.texture = SKTexture(image: #imageLiteral(resourceName: "Referee"))
+        if (contact.bodyA.categoryBitMask == CollisionMasks.referee && contact.bodyB.categoryBitMask == CollisionMasks.ball) ||
+            (contact.bodyB.categoryBitMask == CollisionMasks.referee && contact.bodyA.categoryBitMask == CollisionMasks.ball) {
+            score = 0
+            removeChildren(in: [scoreLabel])
+            createScoreLabel()
         }
+
+        if (contact.bodyA.categoryBitMask == CollisionMasks.referee && contact.bodyB.categoryBitMask == CollisionMasks.yellowCard) ||
+            (contact.bodyB.categoryBitMask == CollisionMasks.referee && contact.bodyA.categoryBitMask == CollisionMasks.yellowCard) {
+            score += 1
+            removeChildren(in: [scoreLabel])
+            createScoreLabel()
+
+
+            if contact.bodyA.categoryBitMask == CollisionMasks.yellowCard {
+                removeChildren(in: [contact.bodyA.node ?? SKNode()])
+            } else {
+                removeChildren(in: [contact.bodyB.node ?? SKNode()])
+            }
+
+        }
+
+        if (contact.bodyA.categoryBitMask == CollisionMasks.referee && contact.bodyB.categoryBitMask == CollisionMasks.redCard) ||
+            (contact.bodyB.categoryBitMask == CollisionMasks.referee && contact.bodyA.categoryBitMask == CollisionMasks.redCard) {
+            score += 2
+            removeChildren(in: [scoreLabel])
+            createScoreLabel()
+
+            if contact.bodyA.categoryBitMask == CollisionMasks.redCard {
+                removeChildren(in: [contact.bodyA.node ?? SKNode()])
+            } else {
+                removeChildren(in: [contact.bodyB.node ?? SKNode()])
+            }
+        }
+
+
 //        print("DID BEGIN")
 //        print(contact)
 //        print("")
